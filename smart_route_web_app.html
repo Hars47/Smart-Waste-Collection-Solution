@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Route-Optimized Waste Collection App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- IMPORTANT: Replace DEMO_KEY with your actual Google Maps JavaScript API key -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=DEMO_KEY&libraries=places&callback=initMap" async defer></script>
+  <style>
+    #map { height: 400px; width: 100%; }
+  </style>
+</head>
+<body>
+<div class="container py-4">
+  <h2 class="text-center mb-4">Route-Based Waste Collection App</h2>
+
+  <div class="mb-3">
+    <label for="workerSelect" class="form-label">Select Worker</label>
+    <select id="workerSelect" class="form-select">
+      <option value="">-- Choose --</option>
+      <option value="worker001">Ravi Kumar</option>
+    </select>
+    <button class="btn btn-primary mt-2" onclick="safeDisplayRoute()">Display Route</button>
+  </div>
+
+  <div id="map"></div>
+
+  <h5 class="mt-4">Stops for Today</h5>
+  <ul id="stopList" class="list-group"></ul>
+</div>
+
+<script>
+  const workerRoutes = {
+    "worker001": [
+      { id: "HH101", name: "House 101", lat: 12.9321, lng: 74.856 },
+      { id: "HH102", name: "House 102", lat: 12.9332, lng: 74.857 },
+      { id: "HH103", name: "House 103", lat: 12.9345, lng: 74.858 }
+    ]
+  };
+
+  let map;
+  function initMap() {
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: { lat: 12.9325, lng: 74.8565 },
+      zoom: 15
+    });
+  }
+
+  function safeDisplayRoute() {
+    if (typeof map === 'undefined' || !map) {
+      alert("Map not initialized yet. Please wait and try again.");
+      return;
+    }
+    displayRoute();
+  }
+
+  function displayRoute() {
+    const id = document.getElementById("workerSelect").value;
+    if (!id) return;
+
+    const route = workerRoutes[id];
+    const bounds = new google.maps.LatLngBounds();
+    const list = document.getElementById("stopList");
+    list.innerHTML = "";
+
+    const routePath = route.map(stop => {
+      const marker = new google.maps.Marker({
+        position: { lat: stop.lat, lng: stop.lng },
+        map,
+        title: stop.name
+      });
+      bounds.extend(marker.position);
+      const li = document.createElement("li");
+      li.className = "list-group-item";
+      li.innerText = stop.name;
+      list.appendChild(li);
+      return marker.position;
+    });
+
+    const routePolyline = new google.maps.Polyline({
+      path: routePath,
+      geodesic: true,
+      strokeColor: "#007bff",
+      strokeOpacity: 1.0,
+      strokeWeight: 2
+    });
+    routePolyline.setMap(map);
+    map.fitBounds(bounds);
+  }
+</script>
+</body>
+</html>
